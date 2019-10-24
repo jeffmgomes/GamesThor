@@ -1,17 +1,5 @@
 <?php
 	session_start();
-	$cart = array();
-	if(isset($_SESSION['cartItems'])){
-		$cart = $_SESSION['cartItems'];
-		if(count($cart) > 0){
-			require("php/products.php");
-			$list = "";
-			foreach (array_keys($cart) as $key => $value) {
-				$list = $list . $value .",";
-			}
-			$items = getProductsByList(substr_replace($list,"",-1));
-		}
-	}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,48 +21,16 @@
 
 <div class="super_container">
 
-	<!-- Checkout Summary -->
+	<!-- Order Summary -->
 
 	<div class="cart_section">
 		<div class="container">
 			<div class="row">
 				<div class="col-lg-10 offset-lg-1">
 					<div class="cart_container">
-						<div class="cart_title">Checkout - Order</div>
-						<div class="cart_items">
-							<ul class="cart_list">
-								<?php
-									if(count($cart) > 0){										
-											while ($row = mysqli_fetch_array($items, MYSQLI_ASSOC)){
-												echo "<li class='cart_item clearfix'>
-												<div class='cart_item_image'><img src='images/". $row['ProductID'] .".jpg' alt=''></div>
-												<div class='cart_item_info d-flex flex-md-row flex-column justify-content-between'>
-													<div class='cart_item_name cart_info_col'>
-														<div class='cart_item_title'>Name</div>
-														<div class='cart_item_text'>".$row['Name'] ."</div>
-													</div>
-													<div class='cart_item_quantity cart_info_col'>
-														<div class='cart_item_title'>Quantity</div>
-														<div class='cart_item_text'>".$cart[$row['ProductID']][0] ."</div>
-													</div>
-													<div class='cart_item_price cart_info_col'>
-														<div class='cart_item_title'>Price</div>
-														<div class='cart_item_text'>". $row['Price'] ."</div>
-													</div>
-													<div class='cart_item_total cart_info_col'>
-														<div class='cart_item_title'>Total</div>
-														<div class='cart_item_text'>". $cart[$row['ProductID']][0] * $cart[$row['ProductID']][1] ."</div>
-													</div>
-												</div>
-											</li>";
-											}
-									}else{
-										echo "No Items in the cart";
-									}
-								?>
-							</ul>
-						</div>
-						
+						<div class="cart_title">Thank you <?php echo $_SESSION['customerName'] ?></div>
+                        <div class="cart_title">Your Order Number is: <?php echo $_SESSION['orderId'] ?></div>
+
 						<!-- Order Total -->
 						<div class="order_total">
 							<div class="order_total_content text-md-right">
@@ -84,11 +40,8 @@
 						</div>
 
 						<div class="cart_buttons">
-						<form action="cart.php" style="display: inline">
-							<button type="submit" class="button cart_button_clear">Back to Cart</button>
-						</form>
-						<form action="php/submitOrder.php" style="display: inline">
-							<button type="submit" class="button cart_button_checkout">Confirm Order</button>
+						<form action="php/paypal.php" style="display: inline">
+							<button type="submit" class="button cart_button_checkout">Pay using PayPal</button>
 						</form>
 						</div>
 					</div>

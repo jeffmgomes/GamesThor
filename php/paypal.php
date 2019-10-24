@@ -1,5 +1,5 @@
 <?php
-
+session_start();
 /*  PHP Paypal IPN Integration Class Demonstration File
  *  
 */
@@ -25,12 +25,12 @@ switch ($_GET['action']) {
       // $p->add_field('first_name', $_POST['first_name']);
       // $p->add_field('last_name', $_POST['last_name']);
       
-      $p->add_field('business', 'jefferson_seller@tafesa.org');
+      $p->add_field('business', 'gamesthor@u.com');
       $p->add_field('return', $this_script.'?action=success');
       $p->add_field('cancel_return', $this_script.'?action=cancel');
       $p->add_field('notify_url', $this_script.'?action=ipn');
-      $p->add_field('item_name', 'Paypal Test Transaction');
-      $p->add_field('amount', '1.99');
+      $p->add_field('item_name', 'Order number '. $_SESSION["orderId"]);
+      $p->add_field('amount', $_SESSION["cartTotal"]);
       $p->add_field('currency_code','AUD');
 
       $p->submit_paypal_post(); // submit the fields to paypal
@@ -41,10 +41,20 @@ switch ($_GET['action']) {
    
       // This is where you would have the code to
       // email an admin, update the database with payment status, activate a
-      // membership, etc.  
+      // membership, etc. 
+      require("orderClass.php");
+      $order = new Order();
+      $order->orderId = $_SESSION["orderId"];
+      $order->customerId = $_SESSION["customerId"];
+      $order->paymentType = "PayPal";
+      $order->status = "Paid";
+      $result = $order->updateOrder(); // Update order to paid
+
+      unset($_SESSION["cartItems"]); // Clean the cart
+      unset($_SESSION["cartTotal"]); // Clean the cart
  
       echo "<html><head><title>Success</title></head><body><h3>Thank you for your order.</h3>";
-      foreach ($_POST as $key => $value) { echo "$key: $value<br>"; }
+      echo "<a href='../index.php'>Go back to Home</a> ";
       echo "</body></html>";
       
       // You could also simply re-direct them to another page, or your own 
@@ -56,8 +66,16 @@ switch ($_GET['action']) {
    case 'cancel':       // Order was canceled...
 
       // The order was canceled before being completed.
+      require("orderClass.php");
+      $order = new Order();
+      $order->orderId = $_SESSION["orderId"];
+      $order->customerId = $_SESSION["customerId"];
+      $order->paymentType = "PayPal";
+      $order->status = "Canceled";
+      $result = $order->updateOrder(); // Update the order to cancel
  
       echo "<html><head><title>Canceled</title></head><body><h3>The order was canceled.</h3>";
+      echo "<a href='../index.php'>Go back to Home</a> ";
       echo "</body></html>";
       
       break;

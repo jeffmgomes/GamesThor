@@ -7,7 +7,7 @@ class Order{
     public $items;
     public $total;
     public $paymentType;
-    public $paid;
+    public $status;
 
     private $stmt;
 
@@ -39,6 +39,23 @@ class Order{
         return $this->orderId;
     }
 
+    public function getOrder(){
+        try {
+            $query = "SELECT * FROM `wishlist` WHERE `CustomerID` = " . $this->customerId;
+            $query = $this->stmt->prepare($query);
+            $query->execute();
+            $result = $query->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            $query = $this->stmt->prepare($query);
+            $query->bind_param("ss",$email, $password);
+            $query->execute();
+            $result = $query->get_result()->fetch_assoc(); // Get a single row
+            $query->close();
+            return $result;
+        } catch (\Throwable $th) {
+            exit($th->getMessage());
+        }
+    }
 
     // Remove a product from the wishList
     public function submitOrder(){
@@ -51,35 +68,32 @@ class Order{
             $query->bind_param("ssd",$this->customerId, $date, $this->total);
             $query->execute();
             $orderId = $query->insert_id;
-            $result = null;
             if($orderId){
                 $this->orderId = $orderId; // Set the orderId property
-                $result = $this->insertItems($this->orderId);
+                $this->insertItems();
             }
             $query->close();
-            return $result;
+            return $this->orderId;
         } catch (Exception $th) {
             exit($th->getMessage());
         }
     }
 
-    public function insertItems($orderId){
+    public function insertItems(){
         try {
-            $query = "INSERT INTO `orderproduct` VALUES ";
+            $query = "INSERT INTO `orderproduct`(`OrderID`, `ProductID`, `Quantity`, `ProdPrice`) VALUES";
 
             $values = "";
             // Add the multiple values to the insert
             foreach ($this->items as $key => $value) {
-                $values .= "('$this->customerId','$key','$value[0]',$value[1]),";
+                $values .= "($this->orderId,$key,$value[0],$value[1]),";
             }
             // Concat query with values and remove the last comma that the foreach puts
             $query .= substr_replace($values,"",-1);
 
             $query = $this->stmt->prepare($query);
             $query->execute();
-            $result = $query->affected_rows; // Get rows inserted
             $query->close();
-            return ($result ? $result : false);
         } catch (Exception $th) {
             exit($th->getMessage());
         }
@@ -89,10 +103,10 @@ class Order{
         try {
             $query = "UPDATE `order`
                       SET `PaymentType` = ?,
-                         `Paid` = ? 
+                         `Status` = ? 
                     WHERE orderId = ? "; // Create the query
             $query = $this->stmt->prepare($query);
-            $query->bind_param("sss",$this->paymentType,$this->paid,$this->orderId);
+            $query->bind_param("sss",$this->paymentType,$this->status,$this->orderId);
             $query->execute();
             $result = $query->affected_rows;
             $query->close();

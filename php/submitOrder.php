@@ -6,8 +6,10 @@
         $order = new Order();
         $order->customerId = $_SESSION["customerId"];
         $order->items = $_SESSION["cartItems"];
-        $result = $order->submitOrder();
-        if($result){
+        $orderId = $order->submitOrder();
+        if($orderId){
+            $_SESSION["orderId"] = $orderId;
+            header("Location: ../payment.php");
             echo "Thanks " . $result;
         }else{
             echo " Failed!";
